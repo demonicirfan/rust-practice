@@ -136,3 +136,97 @@ When a value is moved, Rust does a shallow copy, but what if you want to create 
 
 Due to deep copying, both s1 and s2 are free to independently drop their heap buffers.
 
+## References and Borrowing
+
+ Ampersands ( `&` ) are used to represent references, they allow you to refer to some value without taking ownership of it
+
+ ``` rust
+ let s1 = String::from("hello");
+ let len = calculate_length(&s1);
+ ```
+
+ the `&s1` syntax lets us create a reference that refers to the value of s1 but does not own it. Because it does not own it, The value it points to will not be dropped when the reference stops being used.
+
+ ``` rust
+ fn calculate_length(s: &string) -> usize {  // s is a reference to a String
+  s.len()
+ } // here s goes out of scope. But because it does not have ownership of what it refers to nothing happens
+```
+
+We call the action of creating a reference *borrowing*. 
+
+Never try to modify a borrowed value
+
+``` rust
+fn main () {
+    let s = String::from("hello");
+    change(&s);
+}
+
+fn change(some_string: &String){
+    some_string.push_str(", world!");
+}
+```
+
+this will give an error ``` cannot borrow '*some_string' as mutable as it is behind a `&` reference```
+
+### Mutable references
+
+to fix the above code we will use a mutable reference
+
+``` rust
+fn main(){
+    let s = String::from("hello");
+    change(&mut s);
+}
+
+fn change (some_string: &mut String){ // change function will mutate the value it borrows
+    some_string.push_str(", world");
+}
+```
+
+- You can only have one mutable reference to a particular piece of data in a particular scope.
+
+``` rust
+let must s = String::from("hello");
+let r1 = &mut s;
+let r2 = &mut s; // error: cannot borrow `s` as mutable more than once at a time
+```
+We cannot have a immutable reference whiw we have an immutable one to the same value. Users of an immutable reference cdont expect the value to suddenly change out from under them however multiple references are allowed because no one who is just reading the data has the ability to affect anyone elses reading of the data. 
+
+Not that a ference scope starts from where it is introduced and continues thourgh the last time that references is used.
+
+```
+ let mut s = String::from("hello");
+
+    let r1 = &s; // no problem
+    let r2 = &s; // no problem
+    println!("{} and {}", r1, r2);
+    // variables r1 and r2 will not be used after this point
+
+    let r3 = &mut s; // no problem
+    println!("{}", r3);
+```
+
+This code compiles because the last usage of the immutable references the println! occus before the mutable reference is introduced.
+
+Important points
+- At any given time, you can have either one mutable reference or any number of immutable references.
+- References must always be valid.
+
+
+## Slics
+
+There are two types of strings in rust - String and &str.
+Both String and &str are a grouping of characters(u8's);
+Difference 
+    - How they are stored in memory
+    - How programmers uses
+  
+Strings
+   - Heap
+   - Mutable
+(&str) string slick are complex
+    - they are immutable ( exceptions )
+    - often allocated on the stack, sometimes a heap reference sometimes embedded in the code
+  - Can translate between String and str
